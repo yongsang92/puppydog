@@ -5,7 +5,6 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import com.puppydog.mall.dd.domain.OrderItem;
-import com.puppydog.mall.dd.domain.OrderItemRepoCustom;
 import com.puppydog.mall.dto.OrderListItemShow;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Projections;

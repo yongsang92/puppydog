@@ -9,7 +9,7 @@ import static com.puppydog.mall.dd.item.QSnack.snack;
 import com.puppydog.mall.dto.ItemShowDto;
 import com.puppydog.mall.dto.WishItemDto;
 import com.puppydog.mall.dto.searchCondition.ItemSearchCondition;
-import com.puppydog.mall.repository.ItemRepoCustom;
+
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;

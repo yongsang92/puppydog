@@ -1,4 +1,4 @@
-package com.puppydog.mall.repository;
+package com.puppydog.mall.customrepository;
 import java.util.List;
 
 import com.puppydog.mall.dto.ItemShowDto;
