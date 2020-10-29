@@ -1,0 +1,232 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+<!-- display start -->
+<div layout:fragment="content">
+
+    <section class="ftco-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-10 mb-5 text-center">
+                    <ul id="cates" class="product-category">
+                        <li><a href="#">정렬</a></li>
+                        <li><a id="regdate" >신상품 순</a></li>
+                        <li><a id="desc">높은 가격순</a></li>
+                        <li><a id="asc" >낮은 가격순</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- item list start -->
+            <div class="row" id="row">
+
+            </div>
+            <!-- item list end -->
+
+            <!-- paging button start -->
+            <div class="row mt-5">
+                <div class="col text-center">
+                    <div class="block-27">
+                        <ul>
+                            <li><a href="#">&lt;</a></li>
+                            <li class="page-item" th:if="${result.prevPage}">
+                                <a th:href="${result.prevPage.pageNumber-1} ">이전 [[${result.prevPage.pageNumber} +
+                                    1]]</a></li>
+
+                            <li class="page-item"
+                                th:classappend="${p.pageNumber == result.currentPageNum-1}?active: '' "
+                                th:each="p:${result.pageList}"><a th:href="${p.pageNumber} ">[[${p.pageNumber} +1]]</a>
+                            </li>
+
+                            <li class="page-item" th:if="${result.nextPage}"><a
+                                    th:href="${result.nextPage.pageNumber+1} ">다음 [[${result.nextPage.pageNumber} +
+                                    1]]</a></li>
+                            <li><a href="#">&gt;</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form id='pagingForm' th:action="@{/item/all}" method="get">
+                    <input type='hidden' name='page' th:value=${result.currentPageNum-1}>
+                    <input type='hidden' name='size' th:value=${result.currentPage.pageSize}>
+                    <input type='hidden' name='type' th:value=${type}>
+                    <input type='hidden' name='sort' th:value=${sort}>
+                </form>
+            </div>
+            <!-- paging button end -->
+        </div>
+    </section>
+    <!-- display end -->
+
+
+    <th:block layout:fragment="script">
+
+        <script th:inline="javascript">
+            
+            let sort = [[${ sort }]];
+            if (sort == "desc") {
+                document.querySelector("#desc").setAttribute("class", "active");
+                document.querySelector("#asc").setAttribute("class", "");
+                document.querySelector("#regdate").setAttribute("class", "");
+            } else if(sort=="asc") {
+                document.querySelector("#desc").setAttribute("class", "");
+                document.querySelector("#asc").setAttribute("class", "active");
+                document.querySelector("#regdate").setAttribute("class", "");
+            }else{
+                document.querySelector("#desc").setAttribute("class", "");
+                document.querySelector("#asc").setAttribute("class", "");
+                document.querySelector("#regdate").setAttribute("class", "active");
+            }
+            // 정렬 버튼 active 코드
+
+
+            let catest = document.querySelector("#cates");
+
+            let regdate = document.querySelector("#regdate");
+            regdate.setAttribute("href", "/item/all?type=" + [[${ type }]] + "&sort=regdate");
+
+            let desc = document.querySelector("#desc");
+            desc.setAttribute("href", "/item/all?type=" + [[${ type }]] + "&sort=desc");
+
+            let asc = document.querySelector("#asc");
+            asc.setAttribute("href", "/item/all?type=" + [[${ type }]] + "&sort=asc");
+
+            // 정렬 버튼에 하이퍼미디어 할당
+
+
+            let data = [[${ result.result.content }]];
+
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+
+                let img = document.createElement("img");
+                img.setAttribute("class", "img-fluid");
+                img.setAttribute("src", "/thumb/" + item.thumbnail);// 아이템 사진
+                img.setAttribute("alt", "Colorlib Template");
+
+                let span = document.createElement("span");
+                span.setAttribute("class", "status");
+
+                span.innerHTML = item.discount + "%"; // 할인율 
+
+                let div = document.createElement("div");
+                div.setAttribute("class", "overlay");
+
+                let aTag = document.createElement("a");
+                aTag.setAttribute("class", "img-prod");
+                aTag.setAttribute('href', "/item/" + item.id);
+
+                aTag.appendChild(img);
+                if (item.discount != null)
+                    aTag.appendChild(span);
+                aTag.appendChild(div);
+                ///
+
+
+                let h3Atag = document.createElement("a");
+                h3Atag.setAttribute("href", "#");
+                h3Atag.innerHTML = item.name; // 아이템 이름
+                let h3Tag = document.createElement("h3");
+                h3Tag.appendChild(h3Atag);
+                ///
+
+
+                let opSpan = document.createElement("span");
+                if (item.discount != null) {
+                    opSpan.setAttribute("class", "mr-2 price-dc");
+                }
+                else {
+                    opSpan.setAttribute("class", "price");
+                }
+                opSpan.innerHTML = "$" + item.price; // 기존 가격
+
+                let spSpan = document.createElement("span");
+                spSpan.setAttribute("class", "price-sale");
+                spSpan.innerHTML = "$" + Math.floor(item.price * ((100 - item.discount) / 100)); // 세일 가격
+
+                let priceP = document.createElement("p");
+                priceP.setAttribute("class", "price");
+                priceP.appendChild(opSpan);
+                if (item.discount != null)
+                    priceP.appendChild(spSpan);
+
+                let pricingDiv = document.createElement("div");
+                pricingDiv.setAttribute("class", "pricing");
+                pricingDiv.appendChild(priceP);
+
+                let flexDiv = document.createElement("div");
+                flexDiv.setAttribute("class", "d-flex");
+                flexDiv.appendChild(priceP);
+                /// 
+
+
+
+
+
+                let cartI = document.createElement("i");
+                cartI.setAttribute("class", "ion-ios-cart");
+                let cartSpan = document.createElement("span");
+                cartSpan.appendChild(cartI);
+                let cartAtag = document.createElement("a");
+                cartAtag.setAttribute("href", "#");
+                cartAtag.setAttribute("class", "buy-now d-flex justify-content-center align-items-center mx-1");
+
+                let heartI = document.createElement("i");
+                heartI.setAttribute("class", "ion-ios-heart");
+                let heartSpan = document.createElement("span");
+                heartSpan.appendChild(cartI);
+                let heartAtag = document.createElement("a");
+                heartAtag.setAttribute("href", "#");
+                heartAtag.setAttribute("class", "heart d-flex justify-content-center align-items-center");
+
+                let mAutoDflex = document.createElement("div");
+                mAutoDflex.setAttribute("class", "m-auto d-flex");
+                mAutoDflex.appendChild(cartAtag);
+                mAutoDflex.appendChild(heartAtag);
+
+                let bottom = document.createElement("div");
+                bottom.setAttribute("class", "bottom-area d-flex px-3");
+                bottom.appendChild(mAutoDflex);
+                ///
+
+                let textCenter = document.createElement("div");
+                textCenter.setAttribute("class", "text py-3 pb-4 px-3 textCenter");
+                textCenter.appendChild(h3Tag);
+                textCenter.appendChild(flexDiv);
+                textCenter.appendChild(bottom);
+
+
+                let productDiv = document.createElement("div");
+                productDiv.setAttribute("class", "product");
+                productDiv.appendChild(aTag);
+                productDiv.appendChild(textCenter);
+
+                let fctoDiv = document.createElement("div");
+                fctoDiv.setAttribute("class", "col-md-6 col-lg-3 ftco-animate");
+                fctoDiv.appendChild(productDiv);
+                let row = document.querySelector('#row');
+
+                row.appendChild(fctoDiv);
+            }
+
+
+            $(function () {
+                var pagingForm = $("#pagingForm");
+
+                $(".block-27 a").click(function (e) {
+                    e.preventDefault();
+
+                    pagingForm.find('[name="page"]').val($(this).attr('href'));
+
+                    pagingForm.submit();
+                });
+
+            });
+
+
+
+
+
+
+        </script>
+    </th:block>
+</div>

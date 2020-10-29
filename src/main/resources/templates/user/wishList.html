@@ -1,0 +1,332 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+
+
+
+
+
+
+<!-- display start -->
+<div layout:fragment="content">
+
+    <div class="hero-wrap hero-bread" style="background-image: url('img/item.jpg');">
+        <div class="container">
+            <div class="row no-gutters slider-text align-items-center justify-content-center">
+                <div class="col-md-9 ftco-animate text-center">
+                    <p class="breadcrumbs"><span class="mr-2"><a href="index.html">Home</a></span> <span>Wishlist</span>
+                    </p>
+                    <h1 class="mb-0 bread">My Wishlist</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="ftco-section ftco-cart">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 ftco-animate">
+                    <div class="cart-list">
+                        <table class="table">
+                            <thead class="thead-primary">
+                                <tr class="text-center">
+                                    <th>&nbsp;</th>
+                                    <th>목록</th>
+                                    <th>이름</th>
+                                    <th>가격</th>
+                                    <th>수량</th>
+                                    <th>수정</th>
+                                    <th>총액</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemList">
+                                <!-- item start -->
+
+                                <!-- item end -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="cart-detail cart-total p-3 p-md-4">
+                <h3 class="billing-heading mb-4">계산서</h3>
+                <p class="d-flex">
+                    <span>상품가격</span>
+                    <span id="billItemPrice"></span>
+                </p>
+                <p class="d-flex">
+                    <span>배송비</span>
+                    <span id="billDelivery"></span>
+                </p>
+                <hr>
+                <p class="d-flex total-price">
+                    <span>합계</span>
+                    <span id="billTotal"></span>
+                </p>
+                <p><a id="buy" href="#" class="btn btn-primary py-3 px-4">주문하기</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- display end -->
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <th:block layout:fragment="script">
+        <script th:inline="javascript">
+
+            let wishList = [[${ result }]];
+            let itemList = document.querySelector("#itemList");
+
+            let billItemPrice = 0;
+
+
+            for (let i = 0; i < wishList.length; i++) {
+                let item = wishList[i];
+                console.log(item);
+
+                let span = document.createElement("span");
+                span.setAttribute("class", "ion-ios-close");
+                let a = document.createElement("a");
+                a.setAttribute("id", "cancel");
+                a.setAttribute("href", "#");
+                a.appendChild(span);
+                let td1 = document.createElement("td");
+                td1.setAttribute("class", "product-remove");
+                td1.appendChild(a);
+
+                function cancleHandler(e) {
+                    swal({
+                        title: "삭제하시겠습니까?",
+                        text: "",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    })
+                        .then((willDelete) => {
+                            if (willDelete) {
+                                var csrf = JSON.parse('[[${_csrf}]]');
+                                $.ajax({
+                                    url: '/wishItemDel',
+                                    type: 'post',
+                                    data: {
+                                        itemId: item.id
+                                    },
+                                    beforeSend: function (xhr) {
+                                        xhr.setRequestHeader(csrf.headerName, csrf.token);
+                                    },
+                                    success: function (data) {
+                                        swal("삭제 성공!", "", "success").then((value) => {
+                                            window.location.href = "/showwishList";
+                                        });
+                                    }, error: function (request, status, error) {
+                                        swal("실패", "예상치못한 에러가 발생했습니다", "error");
+                                    }
+                                });
+                            } else {
+                                swal("취소 되었습니다");
+                            }
+                        });
+                }
+                a.addEventListener('click', cancleHandler);
+
+
+                let div = document.createElement("img");
+                div.setAttribute("class", "img");
+                div.setAttribute("src", "/thumb/" + item.thumbnail);
+                let imghref = document.createElement("a");
+                imghref.setAttribute('class', "MOD_FEATURE_Container");
+                imghref.setAttribute('href', "/item/" + item.id);
+                imghref.appendChild(div);
+                let td2 = document.createElement("td");
+                td2.setAttribute("class", "image-prod");
+                td2.appendChild(imghref);
+
+                let itemName = document.createElement("h3");
+                itemName.innerHTML = item.name; // "아이템 이름"
+
+                let td3 = document.createElement("td");
+                td3.setAttribute("class", "product-name");
+                td3.appendChild(itemName);
+
+                //
+
+
+                let itemPrice = document.createElement("td");
+                itemPrice.setAttribute("class", "price");
+
+                let orprice = document.createElement("span");
+                orprice.setAttribute("class", "price");
+                orprice.innerHTML = "$" + item.price; // "가격";
+                itemPrice.appendChild(orprice);
+
+                if (item.discount > 0) {
+                    let dcprice = document.createElement("span");
+
+                    dcprice.innerHTML = " → $" + Math.floor(item.price * ((100 - item.discount) / 100)); // 세일 가격
+                    itemPrice.appendChild(dcprice);
+                    orprice.style.setProperty("text-decoration", "line-through");
+                    orprice.style.color = "grey";
+                }
+                //
+
+                if (item.discount > 0) {
+                    billItemPrice += item.count * Math.floor(item.price * ((100 - item.discount) / 100));
+                } else {
+                    billItemPrice += item.price * item.count;
+                }
+
+                // 
+
+
+
+                let quantity = document.createElement("input");
+                quantity.setAttribute("type", "text");
+                quantity.setAttribute("id", "quantity");
+                quantity.setAttribute("name", "quantity");
+                quantity.setAttribute("value", item.count); // 수량
+                quantity.setAttribute("class", "quantity form-control input-number");
+                let quanDiv = document.createElement("div");
+                quanDiv.setAttribute("class", "input-group mb-3");
+                quanDiv.appendChild(quantity);
+                let quantd = document.createElement("td");
+                quantd.setAttribute("class", "quantity");
+                quantd.appendChild(quanDiv);
+
+
+
+
+                function modibtnHandler(e) {
+                    let count = e.currentTarget.parentNode.parentNode.childNodes[4].lastChild.lastChild.value;
+                    if (count < 1) {
+                        swal("실패", "최소 수량은 1개입니다", "error");
+                    } else {
+                        swal({
+                            title: "수정 하시겠습니까?",
+                            text: "",
+                            icon: "warning",
+                            buttons: true,
+                            dangerMode: true,
+                        }).then((willDelete) => {
+                            if (willDelete) {
+                                var csrf = JSON.parse('[[${_csrf}]]');
+                                $.ajax({
+                                    url: '/order/wishlistCountModi',
+                                    type: 'post',
+                                    data: {
+                                        itemId: item.id,
+                                        count: count
+                                    },
+                                    beforeSend: function (xhr) {
+                                        xhr.setRequestHeader(csrf.headerName, csrf.token);
+                                    },
+                                    success: function (data) {
+                                        if (data > 0) {
+                                            swal("최대 수량은", data + "개 입니다", "error");
+                                            // window.location = "/showwishList";
+                                        } else {
+                                            window.location = "/showwishList";
+                                        }
+                                    }, error: function (request, status, error) {
+                                        swal("실패", "숫자를 입력해주세요", "error");
+                                    }
+                                });
+                            } else {
+                                swal("취소 되었습니다");
+                            }
+                        });
+                    }
+                }
+
+                let modibtn = document.createElement("input");
+                modibtn.setAttribute("type", "button");
+                modibtn.setAttribute("id", "modibtn");
+                modibtn.setAttribute("class", "btn btn-primary py-2 px-3");
+                modibtn.setAttribute("value", "수정");
+                modibtn.addEventListener('click', modibtnHandler);
+
+                let moditd = document.createElement("td");
+                moditd.setAttribute("class", "modify");
+                moditd.appendChild(modibtn);
+
+
+
+                let itemTotalPrice = document.createElement("td");
+                itemTotalPrice.setAttribute("class", "total"); // 총가격
+
+                if (item.discount > 0) {
+                    itemTotalPrice.innerHTML = "$" + item.count * (Math.floor(item.price * ((100 - item.discount) / 100)));
+                } else {
+                    itemTotalPrice.innerHTML = "$" + item.count * item.price;
+
+                }
+
+
+                let centertr = document.createElement("tr");
+                centertr.setAttribute("class", "text-center");
+
+                centertr.appendChild(td1);
+                centertr.appendChild(td2);
+                centertr.appendChild(td3);
+                centertr.appendChild(itemPrice);
+                centertr.appendChild(quantd);
+                centertr.appendChild(moditd);
+                centertr.appendChild(itemTotalPrice);
+
+
+                itemList.appendChild(centertr);
+
+                document.querySelector("#billItemPrice").innerHTML = billItemPrice;
+
+                let deliveryprice = 0;
+                if (billItemPrice > 20) {
+                    document.querySelector("#billDelivery").innerHTML = "$" + 0;
+                    deliveryprice = 0;
+                } else {
+                    document.querySelector("#billDelivery").innerHTML = "$" + 3;
+                    deliveryprice = 3;
+                }
+
+                document.querySelector("#billTotal").innerHTML = "$" + (billItemPrice + deliveryprice);
+
+            }
+
+
+
+            $('#buy').click(function () {
+                swal({
+                    title: "주문 하시겠습니까??",
+                    text: "",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        var csrf = JSON.parse('[[${_csrf}]]');
+                        $.ajax({
+                            url: '/order/wishlistBuy',
+                            type: 'post',
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader(csrf.headerName, csrf.token);
+                            },
+                            success: function (data) {
+                                swal("주문 완료!", "", "success");
+                            }, error: function (request, status, error) {
+                                alert("code = " + request.status + " message = " + request.responseText + " error = " + error);
+                            }
+                        });
+                    } else {
+                        swal("취소 되었습니다");
+                        window.location = "/showwishList";
+                    }
+                });
+
+
+            });
+
+
+        </script>
+
+        </script>
+    </th:block>
+</div>

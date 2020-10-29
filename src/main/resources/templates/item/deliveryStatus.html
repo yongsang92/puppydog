@@ -1,0 +1,95 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+
+<head>
+    <title>배송조회</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,400i,700,700i&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Amatic+SC:400,700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/open-iconic-bootstrap.min.css">
+    <link rel="stylesheet" href="/css/animate.css">
+
+    <link rel="stylesheet" href="/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="/css/magnific-popup.css">
+
+    <link rel="stylesheet" href="/css/aos.css">
+
+    <link rel="stylesheet" href="/css/ionicons.min.css">
+
+    <link rel="stylesheet" href="/css/bootstrap-datepicker.css">
+    <link rel="stylesheet" href="/css/jquery.timepicker.css">
+
+
+    <link rel="stylesheet" href="/css/flaticon.css">
+    <link rel="stylesheet" href="/css/icomoon.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="col-md-12 heading-section text-center ftco-animate fadeInUp ftco-animated">
+            <span class="subheading">Green Field</span>
+            <h2 class="mb-4">배송조회</h2>
+            <h4 class="mb-4 billing-heading">배송 상태 : [[${deliveryStatus}]]</h4>
+            <h4 class="mb-4 billing-heading">주문 번호 : [[${orderId}]]</h4>
+            <button id="cancel" class="btn btn-primary py-3 px-4">주문취소</button>
+        </div>
+    </div>
+
+
+  
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script th:inline="javascript">
+        let status = [[${ deliveryStatus }]];
+        if (status == "READY") {
+            $("#cancel").attr("disabled", false);
+        } else {
+            $("#cancel").attr("disabled", true);
+        }
+
+        function cancelHandler(e) {
+            swal({
+                title: "주문을 취소하시겠습니까?",
+                text: "",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+                .then((willDelete) => {
+                    if (willDelete) {
+                        var csrf = JSON.parse('[[${_csrf}]]');
+                        $.ajax({
+                            url: '/order/cancel',
+                            type: 'post',
+                            data: {
+                                itemId: [[${ itemId }]],
+                                orderId: [[${ orderId }]]
+                            },
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader(csrf.headerName, csrf.token);
+                            },
+                            success: function (data) { // data : 컨트롤러 리턴값
+                                swal("주문 취소 성공", "", "success");
+                            }, error: function (request, status, error) {
+                            }
+                        });
+                    } else {
+                        swal("취소 되었습니다");
+                    }
+                });
+        }
+        let cancel = document.querySelector("#cancel");
+        cancel.addEventListener("click", cancelHandler);
+
+
+    </script>
+</body>
+
+</html>

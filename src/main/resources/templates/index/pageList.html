@@ -1,0 +1,91 @@
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/layout1}">
+	
+	<head>
+		<link rel="stylesheet" th:href="@{/css/normalize.css}">
+		<link rel="stylesheet" th:href="@{/css/main.css}">
+	</head>
+<div layout:fragment="content">
+
+	<div class="panel-heading">List Page</div>
+	
+	<div class="panel-body pull-right">
+	</div>
+	
+	<div class="panel-body">
+		<div th:with="result=${result.result}">
+			<table class="table table-striped table-bordered table-hover" id="dataTables-example">
+				<thead>
+					<tr>
+						<th>링크</th>
+						<th>name</th>
+						<th>price</th>
+						<th>thumbnail</th>
+					</tr>
+                </thead>
+                
+				<tbody>
+					<tr class="odd gradeX" th:each="item:${result.content}">
+                        <td>
+                            <a th:href="@{'snacks/snack/'+${item.id}}" class='boardLink'>[[${item.id}]] </a>
+                        </td>
+                        <td>[[${item.name}]]</td>
+						<td>[[${item.price}]]</td>
+						<td>[[${item.thumbnail}]]</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<nav>
+			<div>
+				<ul class="pagination">
+					<li class="page-item" th:if="${result.prevPage}">
+                        <a th:href="${result.prevPage.pageNumber-1} ">이전 [[${result.prevPage.pageNumber} + 1]]</a></li>
+
+					<li class="page-item"
+						th:classappend="${p.pageNumber == result.currentPageNum-1 }?active: '' "
+						th:each="p:${result.pageList}"><a
+						th:href="${p.pageNumber} ">[[${p.pageNumber} +1]]</a></li>
+
+					<li class="page-item" th:if="${result.nextPage}"><a
+						th:href="${result.nextPage.pageNumber+1} ">다음 [[${result.nextPage.pageNumber} + 1]]</a></li>
+				</ul>
+			</div>
+        </nav>
+        
+	</div>
+
+	<form id='f1' th:action="@{/store/test}" method="get">
+		<input type='hidden' name='page' th:value=${result.currentPageNum-1}>
+		<input type='hidden' name='size' th:value=${result.currentPage.pageSize}>
+		
+	</form>
+
+
+</div>
+<!--  end fragment -->
+
+<th:block layout:fragment="script">
+
+	<script th:inline="javascript">
+
+	
+		$(function() {
+			var formObj = $("#f1");
+
+			$(".pagination a").click(function(e) {
+
+				e.preventDefault();
+
+				formObj.find('[name="page"]').val($(this).attr('href'));
+
+				formObj.submit();
+			});
+	
+        });   
+		
+	</script>
+
+</th:block>

@@ -1,0 +1,248 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+
+
+
+
+
+
+<!-- display start -->
+<div layout:fragment="content">
+
+    <div class="hero-wrap hero-bread" style="background-image: url('/img/item.jpg');">
+        <div class="container">
+            <div class="row no-gutters slider-text align-items-center justify-content-center">
+                <div class="col-md-9 ftco-animate text-center">
+                    <p class="breadcrumbs">
+                        <span class="mr-2"><a th:href="@{/index}">Home</a></span>
+
+                        <span class="mr-2"><a th:href="@{/index}">Product</a></span>
+                    </p>
+                    <h1 class="mb-0 bread">Green Field</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="ftco-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 mb-5 ftco-animate">
+                    <a id="itemImgScale" class="image-popup">
+                        <img id="itemImg" class="img-fluid" alt="Colorlib Template">
+                    </a>
+                </div>
+                <div class="col-lg-6 product-details pl-md-5 ftco-animate">
+                    <h3 id="itemName"></h3><!-- 상품이름 -->
+                    <div class="rating d-flex">
+                        <p class="text-left mr-4">
+                            <a href="#" class="mr-2">5.0</a>
+                            <a href="#"><span class="ion-ios-star-outline"></span></a>
+                            <a href="#"><span class="ion-ios-star-outline"></span></a>
+                            <a href="#"><span class="ion-ios-star-outline"></span></a>
+                            <a href="#"><span class="ion-ios-star-outline"></span></a>
+                            <a href="#"><span class="ion-ios-star-outline"></span></a>
+                        </p>
+                        <p class="text-left mr-4">
+                            <a href="#" class="mr-2" style="color: #000;">100 <span style="color: #bbb;">평가</span></a>
+                        </p>
+                        <p class="text-left">
+                            <a href="#" class="mr-2" style="color: #000;">500 <span style="color: #bbb;">Sold</span></a>
+                        </p>
+                    </div>
+                    <p class="price d-flex">
+                        <span class="mr-2 price-dc" id="itemPrice"></span> <!-- 가격 -->
+                        <span class="price-sale" id="itemPriceDis"></span><!-- 세일가격 -->
+                    </p>
+                    <p id="itemDes"></p><!-- 상품 설명 -->
+                    <div class="row mt-4">
+
+                        <div class="w-100"></div>
+                        <div class="input-group col-md-6 d-flex mb-3">
+                            <span class="input-group-btn mr-2">
+                                <button type="button" class="quantity-left-minus btn" data-type="minus" data-field="">
+                                    <i class="ion-ios-remove"></i>
+                                </button>
+                            </span>
+                            <input type="text" id="quantity" name="quantity" class="form-control input-number"
+                                value="1">
+                            <span class="input-group-btn ml-2">
+                                <button type="button" class="quantity-right-plus btn" data-type="plus" data-field="">
+                                    <i class="ion-ios-add"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="w-100"></div>
+                        <div class="col-md-12">
+                            <p style="color: #000;">부가 설명란</p>
+                        </div>
+                    </div>
+                    <p><a id="buynow" href="#" class="btn btn-black py-3 px-5">즉시구매</a></p>
+                    <p><a id="bucket" href="#" class="btn btn-black py-3 px-5">장바구니에 담기</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- display end -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <th:block layout:fragment="script">
+
+
+
+        <script th:inline="javascript">
+            let item = [[${ result }]];
+            let userId = [[${ #authentication.name }]];
+
+            let imgPath = item.thumbnail.substring(0, item.thumbnail.indexOf("_thumb")); // 아이템 단일 항목에서는 썸네일 사진 말고 큰 사진을 보여줘야 한다
+
+            let imgScale = document.querySelector("#itemImgScale");
+            imgScale.setAttribute("href", "/thumb/" + imgPath); // 사진을 누르면 확대 되게 설정함a
+            
+            
+            let img = document.querySelector("#itemImg");
+            img.setAttribute("src", "/thumb/" + imgPath);// 아이템 사진  
+
+            let name = document.querySelector("#itemName");
+            name.innerHTML = item.name;
+
+            let price = document.querySelector("#itemPrice"); 
+            price.innerHTML = "$ " + item.price; // 기존 가격
+
+            if (item.discount > 0) {
+                price.style.setProperty("text-decoration", "line-through");
+                price.style.color = "grey";
+                let itemPriceDis = document.querySelector("#itemPriceDis");
+                itemPriceDis.innerHTML = "$" + Math.floor(item.price * ((100 - item.discount) / 100)); // 세일 가격
+            }
+
+
+            let des = document.querySelector("#itemDes");
+            des.innerHTML = item.description;
+
+
+            $('#buynow').click(function () {
+                if (userId == "anonymousUser") {
+                    swal({
+                        title: "로그인이 필요한 기능입니다",
+                        text: "로그인 하시겠습니까?",
+                        buttons: true
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            window.location = "/login";
+                        }
+                    });
+                } else {
+                    let count = document.querySelector("#quantity").value;
+                    var csrf = JSON.parse('[[${_csrf}]]');
+                    $.ajax({
+                        url: '/order/buynow',
+                        type: 'post',
+                        data: {
+                            itemId: item.id,
+                            count: count
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(csrf.headerName, csrf.token);
+                        },
+                        success: function (data) {
+                            if (data > 0) {
+                                swal("실패", "최대 수량은 : " + data + " 개 입니다", "error");
+                            } else {
+                                swal("구매 완료!", "", "success");
+                            }
+                        }, error: function (request, status, error) {
+                            swal("실패", "예상치 못한 예러가 발생했습니다", "error");
+                        }
+                    });
+                }
+            });
+
+
+
+            $('#bucket').click(function () {
+                if (userId == "anonymousUser") {
+                    swal({
+                        title: "로그인이 필요한 기능입니다",
+                        text: "로그인 하시겠습니까?",
+                        buttons: true
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            window.location = "/login";
+                        } else {
+
+                        }
+                    });
+                } else {
+                    let count = document.querySelector("#quantity").value;
+                    var csrf = JSON.parse('[[${_csrf}]]');
+                    $.ajax({
+                        url: '/order/wishlist',
+                        type: 'post',
+                        data: {
+                            itemId: item.id,
+                            count: count
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader(csrf.headerName, csrf.token);
+                        },
+                        success: function (data) {
+                            swal("장바구니에 추가 완료!", "", "success");
+                        }, error: function (request, status, error) {
+                            swal("실패", "숫자를 입력해주세요", "error");
+                        }
+                    });
+                }
+            });
+
+            $('#quantity').blur(function () {
+                let quantity = $('#quantity').val();
+                if (quantity < 1) {
+                    swal('실패', '최소 수량은 1개입니다', 'error');
+                    $('#quantity').val(1);
+                }
+            });
+
+
+            $(function () {
+
+                var quantitiy = 1;
+                $('.quantity-right-plus').click(function (e) {
+
+                    // Stop acting like a button
+                    e.preventDefault();
+                    // Get the field name
+                    var quantity = parseInt($('#quantity').val());
+
+                    // If is not undefined
+
+                    $('#quantity').val(quantity + 1);
+
+
+                    // Increment
+
+                });
+
+                $('.quantity-left-minus').click(function (e) {
+                    // Stop acting like a button
+                    e.preventDefault();
+                    // Get the field name
+                    var quantity = parseInt($('#quantity').val());
+
+                    // If is not undefined
+
+                    // Increment
+                    if (quantity > 1) {
+                        $('#quantity').val(quantity - 1);
+                    }
+                });
+
+            });
+
+
+        </script>
+    </th:block>
+</div>

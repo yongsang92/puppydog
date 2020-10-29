@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+
+import static com.puppydog.mall.dd.domain.QOrderItem.orderItem;
 public class OrderItemRepoImpl implements OrderItemRepoCustom {
 
     private JPAQueryFactory qf;

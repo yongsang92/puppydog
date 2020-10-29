@@ -45,7 +45,7 @@ test {
 }
 def querydslSrcDir = 'src/main/generated'
 
-querydsl {
+querydsl {  
     library = "com.querydsl:querydsl-apt"
     jpa = true
     querydslSourcesDir = querydslSrcDir

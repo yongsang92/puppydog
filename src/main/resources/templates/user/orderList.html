@@ -1,0 +1,220 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout}">
+
+
+
+
+
+
+<!-- display start -->
+<div layout:fragment="content">
+
+    <div class="hero-wrap hero-bread" style="background-image: url('img/item.jpg');">
+        <div class="container">
+            <div class="row no-gutters slider-text align-items-center justify-content-center">
+                <div class="col-md-9 ftco-animate text-center">
+                    <p class="breadcrumbs"><span class="mr-2"><a href="index.html">Home</a></span> <span>Wishlist</span>
+                    </p>
+                    <h1 class="mb-0 bread">My OrderList</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="ftco-section ftco-cart">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 ftco-animate">
+                    <div class="cart-list">
+                        <table class="table">
+                            <thead class="thead-primary">
+                                <tr class="text-center">
+                                    <th>&nbsp;</th>
+                                    <th>목록</th>
+                                    <th>이름</th>
+                                    <th>날짜</th>
+                                    <th>가격</th>
+                                    <th>수량</th>
+                                    <th>배송상태</th>
+                                    <th>총액</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemList">
+                                <!-- item start -->
+
+                                <!-- item end -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- paging button start -->
+            <div class="row mt-5">
+                <div class="col text-center">
+                    <div class="block-27">
+                        <ul>
+                            <li><a href="#">&lt;</a></li>
+                            <li class="page-item" th:if="${result.prevPage}">
+                                <a th:href="${result.prevPage.pageNumber-1} ">이전 [[${result.prevPage.pageNumber} +
+                                    1]]</a></li>
+
+                            <li class="page-item"
+                                th:classappend="${p.pageNumber == result.currentPageNum-1}?active: '' "
+                                th:each="p:${result.pageList}"><a th:href="${p.pageNumber} ">[[${p.pageNumber} +1]]</a>
+                            </li>
+
+                            <li class="page-item" th:if="${result.nextPage}"><a
+                                    th:href="${result.nextPage.pageNumber+1} ">다음 [[${result.nextPage.pageNumber} +
+                                    1]]</a></li>
+                            <li><a href="#">&gt;</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <form id='pagingForm' th:action="@{/orderList}" method="get">
+                    <input type='hidden' name='page' th:value=${result.currentPageNum-1}>
+                    <input type='hidden' name='size' th:value=${result.currentPage.pageSize}>
+
+                </form>
+            </div>
+            <!-- paging button end -->
+        </div>
+    </section>
+    <!-- display end -->
+
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <th:block layout:fragment="script">
+        <script th:inline="javascript">
+
+            let data = [[${ result.result.content }]];
+
+            let itemList = document.querySelector("#itemList");
+
+
+
+            for (let i = 0; i < data.length; i++) {
+                let item = data[i];
+
+                let span = document.createElement("span");
+                span.setAttribute("class", "ion-ios-close");
+                let a = document.createElement("a");
+                a.setAttribute("id", "cancel");
+
+                a.appendChild(span);
+                let td1 = document.createElement("td");
+                td1.setAttribute("class", "product-remove");
+                td1.appendChild(a);
+
+
+
+
+                let div = document.createElement("img");
+                div.setAttribute("class", "img");
+                div.setAttribute("src", "/thumb/" + item.thumbnail);
+                let imghref = document.createElement("a");
+                imghref.setAttribute('class', "MOD_FEATURE_Container");
+                imghref.setAttribute('href', "/item/" + item.itemId);
+                imghref.appendChild(div);
+                let td2 = document.createElement("td");
+                td2.setAttribute("class", "image-prod");
+                td2.appendChild(imghref);
+
+                let itemName = document.createElement("h3");
+                itemName.innerHTML = item.itemName; // "아이템 이름"
+
+                let td3 = document.createElement("td");
+                td3.setAttribute("class", "product-name");
+                td3.appendChild(itemName);
+
+                // 
+                let orderDate = document.createElement("h3");
+                orderDate.innerHTML = item.orderDate.substring(0, 10);
+                let ordertd = document.createElement("td");
+                ordertd.setAttribute("class", "product-name");
+                ordertd.appendChild(orderDate);
+
+                //
+
+                let itemPrice = document.createElement("td");
+                itemPrice.setAttribute("class", "price");
+                itemPrice.innerHTML = "$" + item.itemPrice; // "가격";
+
+                let quantd = document.createElement("td");
+                quantd.setAttribute("class", "product-name");
+                quantd.innerHTML = item.count; // 수량
+
+
+                let modibtn = document.createElement("input");
+                modibtn.setAttribute("type", "button");
+                modibtn.setAttribute("id", "modibtn");
+                modibtn.setAttribute("class", "btn btn-primary py-2 px-3");
+
+            
+                modibtn.setAttribute("value","주문상태 보기");
+                
+                /* 
+                배송상태 항목의 버튼을 누르면 현재 배송 상태를 보여준다
+                1. 배송전 2. 배송시작 3. 배송완료
+                
+                첫번째 목표 : 배송상태 값이 "배송전"일 때만 주문 취소 버튼을 활성화 하기
+    
+                */
+                function DeliverStatusBtnHandler(e){
+                    win= window.open('/item/deliveryStatus?deliveryStatus='+item.deliveryStatus
+                    +"&itemId="+item.itemId 
+                    +"&orderId="+item.orderId 
+                    ,'_blank', 'width=400, height=350, resizable=no');
+                }
+                modibtn.addEventListener("click",DeliverStatusBtnHandler);
+
+
+
+
+
+                let moditd = document.createElement("td");
+                moditd.setAttribute("class", "modify");
+                moditd.appendChild(modibtn);
+
+
+
+                let itemTotalPrice = document.createElement("td");
+                itemTotalPrice.setAttribute("class", "total"); // 총가격
+                itemTotalPrice.innerHTML = "$" + item.count * item.itemPrice;
+
+
+                let centertr = document.createElement("tr");
+                centertr.setAttribute("class", "text-center");
+
+                centertr.appendChild(td1);
+                centertr.appendChild(td2);
+                centertr.appendChild(td3);
+                centertr.appendChild(ordertd);
+                centertr.appendChild(itemPrice);
+                centertr.appendChild(quantd);
+                centertr.appendChild(moditd);
+                centertr.appendChild(itemTotalPrice);
+
+
+                itemList.appendChild(centertr);
+
+                $(function () {
+                    var pagingForm = $("#pagingForm");
+
+                    $(".block-27 a").click(function (e) {
+                        e.preventDefault();
+
+                        pagingForm.find('[name="page"]').val($(this).attr('href'));
+
+                        pagingForm.submit();
+                    });
+
+                });
+
+            }
+
+
+        </script>
+
+        </script>
+    </th:block>
+</div>
